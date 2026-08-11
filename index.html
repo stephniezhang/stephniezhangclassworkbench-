@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>班主任工作台</title>
+  <style>
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --ink: #1f2329;
+  --muted: #6b7280;
+  --line: #e6e8eb;
+  --brand: #2f6fed;
+  --brand-soft: #eaf1ff;
+  --ok: #1d9e75;
+  --warn: #ba7517;
+  --danger: #d8504a;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(0, 0, 0, .06), 0 4px 16px rgba(0, 0, 0, .04);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  background: var(--bg); color: var(--ink); font-size: 15px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 880px; margin: 0 auto; padding: 0 16px 64px; }
+header.top {
+  position: sticky; top: 0; z-index: 20; background: var(--surface);
+  border-bottom: 1px solid var(--line); box-shadow: var(--shadow);
+}
+.top-inner { max-width: 880px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.top h1 { font-size: 17px; margin: 0; font-weight: 600; }
+.top .sub { color: var(--muted); font-size: 13px; }
+.top .spacer { flex: 1; }
+.badge { font-size: 12px; padding: 3px 10px; border-radius: 999px; font-weight: 600; white-space: nowrap; }
+.badge-ok { background: #e1f5ee; color: var(--ok); }
+.badge-warn { background: #faedda; color: var(--warn); }
+.top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.profile-card {
+  margin: 16px 0; padding: 18px 20px; border-radius: var(--radius);
+  background: linear-gradient(135deg, #2f6fed, #5b8def); color: #fff; box-shadow: var(--shadow);
+}
+.profile-card .pc-name { font-size: 22px; font-weight: 700; }
+.profile-card .pc-slogan { font-size: 14px; opacity: .92; margin-top: 2px; }
+.profile-card .pc-meta { font-size: 13px; opacity: .85; margin-top: 8px; }
+nav.tabs { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 12px; }
+.nav-btn {
+  border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+  padding: 8px 16px; border-radius: 999px; font-size: 14px; cursor: pointer; white-space: nowrap;
+}
+.nav-btn.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+.view-head { display: flex; align-items: center; justify-content: space-between; margin: 8px 0 14px; gap: 12px; }
+.view-head h2 { font-size: 18px; margin: 0; }
+.empty { color: var(--muted); text-align: center; padding: 40px 0; border: 1px dashed var(--line); border-radius: var(--radius); }
+.card-list { display: flex; flex-direction: column; gap: 10px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 14px 16px; display: flex; align-items: flex-start; gap: 12px; box-shadow: var(--shadow);
+}
+.card.done { opacity: .6; }
+.card-main { flex: 1; min-width: 0; }
+.card-cols { display: flex; flex-wrap: wrap; gap: 4px 14px; font-weight: 600; }
+.card-cols .col:not(:first-child) { color: var(--muted); font-weight: 400; }
+.card-content { margin-top: 6px; color: var(--ink); white-space: pre-wrap; }
+.card-note { margin-top: 6px; color: var(--muted); font-size: 13px; white-space: pre-wrap; }
+.card-link { display: inline-block; margin-top: 8px; color: var(--brand); font-size: 13px; }
+.done-toggle { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 13px; color: var(--muted); }
+.card-actions { display: flex; flex-direction: column; gap: 8px; }
+.btn {
+  border: 1px solid transparent; border-radius: 8px; padding: 8px 14px; font-size: 14px;
+  cursor: pointer; background: var(--surface); color: var(--ink); white-space: nowrap;
+}
+.btn-primary { background: var(--brand); color: #fff; }
+.btn-ghost { border-color: var(--line); color: var(--muted); }
+.btn-danger { border-color: #f3c4c1; color: var(--danger); background: #fdeceb; }
+.modal { position: fixed; inset: 0; background: rgba(15, 23, 42, .45); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 50; }
+.modal.hidden { display: none; }
+.modal-box {
+  background: var(--surface); border-radius: 16px; padding: 22px; width: 100%; max-width: 460px;
+  max-height: 88vh; overflow-y: auto; position: relative; box-shadow: 0 12px 40px rgba(0, 0, 0, .2);
+}
+.modal-box h3 { margin: 0 0 14px; font-size: 17px; }
+.modal-x { position: absolute; top: 12px; right: 14px; border: none; background: none; font-size: 22px; line-height: 1; color: var(--muted); cursor: pointer; }
+.fld { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; font-size: 13px; color: var(--muted); }
+.fld input, .fld select, .fld textarea {
+  font: inherit; color: var(--ink); padding: 9px 10px; border: 1px solid var(--line);
+  border-radius: 8px; background: #fff; width: 100%; resize: vertical;
+}
+.fld input:focus, .fld select:focus, .fld textarea:focus { outline: none; border-color: var(--brand); }
+.card-note { color: var(--muted); font-size: 13px; background: var(--brand-soft); padding: 10px 12px; border-radius: 8px; }
+.err { color: var(--danger); font-size: 13px; min-height: 18px; }
+@media (max-width: 560px) {
+  .top h1 { font-size: 16px; }
+  .top-actions .btn { padding: 7px 10px; font-size: 13px; }
+  .card { flex-direction: column; }
+  .card-actions { flex-direction: row; }
+  .profile-card .pc-name { font-size: 20px; }
+}
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="top-inner">
+      <div>
+        <h1>班主任工作台</h1>
+        <div class="sub" id="headInfo"></div>
+      </div>
+      <div class="spacer"></div>
+      <span id="syncBadge" class="badge">…</span>
+      <div class="top-actions">
+        <button id="exportBtn" class="btn btn-ghost">导出</button>
+        <button id="importBtn" class="btn btn-ghost">导入</button>
+        <button id="settingsBtn" class="btn btn-primary">设置</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="profile-card" id="profileCard"></div>
+    <nav class="tabs" id="nav"></nav>
+    <section id="view"></section>
+  </main>
+
+  <!-- 解锁密码弹窗 -->
+  <div id="passModal" class="modal hidden">
+    <div class="modal-box">
+      <h3>输入保护密码</h3>
+      <div class="card-note">数据已加密。输入你设置的密码以解锁（密码不会上传，仅本机内存中使用）。</div>
+      <label class="fld" style="margin-top:12px"><span>保护密码</span><input type="password" id="passInput" placeholder="你的保护密码"></label>
+      <div class="err" id="passErr"></div>
+      <div class="card-actions"><button class="btn btn-primary" id="passOk">解锁</button></div>
+    </div>
+  </div>
+
+  <!-- 通用弹窗 -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-box">
+      <button class="modal-x" id="modalClose">×</button>
+      <div id="modalBody"></div>
+      <div class="card-actions" id="modalFoot" style="margin-top:14px">
+        <button class="btn btn-primary" id="modalSave">保存</button>
+        <button class="btn btn-ghost" onclick="closeModal()">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="importInput" accept="application/json" style="display:none">
+
+  <script>
+// 客户端加密：AES-GCM，密码仅存于内存，绝不离开浏览器。
+// 未设置密码时自动降级为明文（仍只在你私有项目内）。
+const Crypto = (() => {
+  let key = null;
+  const enc = new TextEncoder();
+  const dec = new TextDecoder();
+
+  function b64(buf) {
+    const u = new Uint8Array(buf);
+    let s = '';
+    for (let i = 0; i < u.length; i++) s += String.fromCharCode(u[i]);
+    return btoa(s);
+  }
+  function b64d(s) {
+    const b = atob(s);
+    const u = new Uint8Array(b.length);
+    for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i);
+    return u.buffer;
+  }
+  async function derive(pass, saltB64) {
+    const salt = saltB64 ? b64d(saltB64) : new Uint8Array(16);
+    const base = await crypto.subtle.importKey('raw', enc.encode(pass), 'PBKDF2', false, ['deriveKey']);
+    return crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+      base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+    );
+  }
+  function newSalt() { return b64(crypto.getRandomValues(new Uint8Array(16))); }
+  async function setKey(pass, salt) { key = await derive(pass, salt); }
+  function clear() { key = null; }
+  function hasKey() { return !!key; }
+
+  async function encrypt(obj) {
+    if (!key) return JSON.stringify(obj);
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(JSON.stringify(obj)));
+    return b64(iv) + ':' + b64(ct);
+  }
+  async function decrypt(str) {
+    if (!key || typeof str !== 'string' || !str.includes(':')) {
+      try { return JSON.parse(str); } catch (e) { return str; }
+    }
+    const [ivb, ctb] = str.split(':');
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64d(ivb) }, key, b64d(ctb));
+    return JSON.parse(dec.decode(pt));
+  }
+
+  return { setKey, clear, hasKey, encrypt, decrypt, newSalt, b64, b64d };
+})();
+  </script>
+
+  <script>
+// 班主任工作台 - 存储层（统一表 cw_data + 客户端加密）
+// mode: supabase（云端同步）/ local（localStorage 兜底）
+// 所有数据写入前经 Crypto 加密；未设密码则为明文。
+const Storage = (() => {
+  const LS_PREFIX = 'cw_';
+  const TABLE = 'cw_data';
+  let mode = 'local';
+  let sb = null;
+
+  function getCfg() { try { return JSON.parse(localStorage.getItem(LS_PREFIX + 'supabase') || 'null'); } catch (e) { return null; } }
+  function setCfg(c) {
+    if (c && c.url && c.key) localStorage.setItem(LS_PREFIX + 'supabase', JSON.stringify(c));
+    else localStorage.removeItem(LS_PREFIX + 'supabase');
+  }
+  function getEnc() { try { return JSON.parse(localStorage.getItem(LS_PREFIX + 'enc') || 'null'); } catch (e) { return null; } }
+  function setEnc(e) { if (e) localStorage.setItem(LS_PREFIX + 'enc', JSON.stringify(e)); else localStorage.removeItem(LS_PREFIX + 'enc'); }
+
+  function loadScript(src) {
+    return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+  }
+
+  async function init() {
+    const c = getCfg();
+    if (c && c.url && c.key) {
+      try {
+        if (!window.supabase) await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
+        sb = window.supabase.createClient(c.url, c.key, { auth: { persistSession: false } });
+        const { error } = await sb.from(TABLE).select('id').limit(1);
+        mode = error ? 'local' : 'supabase';
+      } catch (e) { mode = 'local'; }
+    } else mode = 'local';
+    return mode;
+  }
+
+  async function readType(type) {
+    let rows;
+    if (mode === 'supabase') {
+      const { data, error } = await sb.from(TABLE).select('*').eq('type', type).order('created_at', { ascending: true });
+      if (error) throw error;
+      rows = data || [];
+    } else {
+      rows = JSON.parse(localStorage.getItem(LS_PREFIX + 'rows_' + type) || '[]');
+    }
+    const out = [];
+    for (const r of rows) { try { out.push(await Crypto.decrypt(r.data)); } catch (e) {} }
+    return out;
+  }
+
+  async function writeRow(type, obj) {
+    const data = await Crypto.encrypt(obj);
+    const rec = { id: obj.id, type, created_at: obj.created_at || new Date().toISOString(), data };
+    if (mode === 'supabase') {
+      const { error } = await sb.from(TABLE).upsert(rec);
+      if (error) throw error;
+    } else {
+      const arr = JSON.parse(localStorage.getItem(LS_PREFIX + 'rows_' + type) || '[]');
+      const i = arr.findIndex(x => x.id === rec.id);
+      if (i >= 0) arr[i] = rec; else arr.push(rec);
+      localStorage.setItem(LS_PREFIX + 'rows_' + type, JSON.stringify(arr));
+    }
+  }
+
+  async function delRow(type, id) {
+    if (mode === 'supabase') {
+      const { error } = await sb.from(TABLE).delete().eq('id', id);
+      if (error) throw error;
+    } else {
+      const arr = JSON.parse(localStorage.getItem(LS_PREFIX + 'rows_' + type) || '[]').filter(x => x.id !== id);
+      localStorage.setItem(LS_PREFIX + 'rows_' + type, JSON.stringify(arr));
+    }
+  }
+
+  async function list(type) { return readType(type); }
+  async function upsert(type, row) { return writeRow(type, row); }
+  async function remove(type, id) { return delRow(type, id); }
+
+  async function getKV(key) {
+    if (key === 'profile') return (await readType('profile'))[0] || null;
+    const r = (await readType('kv_' + key))[0];
+    return r ? r.value : null;
+  }
+  async function setKV(key, obj) {
+    if (key === 'profile') return writeRow('profile', Object.assign({ id: 'profile' }, obj));
+    return writeRow('kv_' + key, { id: key, value: obj });
+  }
+
+  return { init, list, upsert, remove, getKV, setKV, getCfg, setCfg, getEnc, setEnc, getMode: () => mode };
+})();
+  </script>
+
+  <script>
+// 班主任工作台 - 应用逻辑（schema 驱动，加密由存储层处理）
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const TABLES = ['students', 'notices', 'links', 'todos'];
+
+  const SCHEMA = {
+    students: {
+      title: '学生名单', addLabel: '添加学生',
+      fields: [
+        { key: 'name', label: '姓名', type: 'text', required: true },
+        { key: 'student_no', label: '学号', type: 'text' },
+        { key: 'gender', label: '性别', type: 'select', options: ['男', '女'] },
+        { key: 'parent_phone', label: '家长电话', type: 'tel' },
+        { key: 'note', label: '备注', type: 'textarea' }
+      ],
+      columns: r => [r.name, r.student_no || '—', r.gender || '—', r.parent_phone || '—']
+    },
+    notices: {
+      title: '通知公告', addLabel: '发通知',
+      fields: [
+        { key: 'title', label: '标题', type: 'text', required: true },
+        { key: 'date', label: '日期', type: 'date' },
+        { key: 'content', label: '内容', type: 'textarea' }
+      ],
+      columns: r => [r.title, r.date || '']
+    },
+    links: {
+      title: '收集与链接', addLabel: '添加链接',
+      fields: [
+        { key: 'title', label: '名称', type: 'text', required: true },
+        { key: 'url', label: '网址/二维码链接', type: 'url' },
+        { key: 'category', label: '分类', type: 'select', options: ['接龙收集', '问卷', '成绩系统', '家长群', '其他'] },
+        { key: 'note', label: '说明', type: 'textarea' }
+      ],
+      columns: r => [r.title, r.category || '—']
+    },
+    todos: {
+      title: '待办提醒', addLabel: '加待办',
+      fields: [
+        { key: 'text', label: '事项', type: 'text', required: true },
+        { key: 'due', label: '截止日期', type: 'date' }
+      ],
+      columns: r => [r.text, r.due || ''],
+      toggleDone: true
+    }
+  };
+
+  const state = { profile: null, data: {} };
+  let current = 'students';
+
+  const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id' + Date.now() + Math.random().toString(16).slice(2));
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  async function bootstrap() {
+    const mode = await Storage.init();
+    state.profile = await Storage.getKV('profile') || { className: '', slogan: '', headTeacher: '', phone: '' };
+    for (const t of TABLES) state.data[t] = await Storage.list(t);
+    renderHeader(); renderProfileCard(); buildNav(); switchTab('students'); updateSyncBadge(mode);
+  }
+
+  function updateSyncBadge(mode) {
+    const enc = Storage.getEnc();
+    const lock = (enc && enc.enabled) ? '🔒' : '';
+    const b = $('#syncBadge');
+    if (mode === 'supabase') { b.textContent = lock + ' 已同步'; b.className = 'badge badge-ok'; }
+    else { b.textContent = lock + ' 本地加密'; b.className = 'badge badge-warn'; }
+  }
+
+  function renderHeader() {
+    $('#classTitle').textContent = state.profile.className || '我的班级';
+    $('#headInfo').textContent = [
+      state.profile.headTeacher && ('班主任：' + state.profile.headTeacher),
+      state.profile.phone && ('☎ ' + state.profile.phone)
+    ].filter(Boolean).join('　') || '点击右上角「设置」完善班级信息并开启同步';
+  }
+  function renderProfileCard() {
+    const p = state.profile;
+    $('#profileCard').innerHTML = `
+      <div class="pc-name">${esc(p.className || '班级名称未填写')}</div>
+      <div class="pc-slogan">${esc(p.slogan || '一句班级口号')}</div>
+      <div class="pc-meta">${esc([p.headTeacher && ('班主任 ' + p.headTeacher), p.phone].filter(Boolean).join(' · '))}</div>`;
+  }
+
+  function buildNav() {
+    const nav = $('#nav'); nav.innerHTML = '';
+    const items = [['students', '学生'], ['notices', '通知'], ['links', '收集'], ['todos', '待办'], ['profile', '概况']];
+    items.forEach(([k, label]) => {
+      const b = document.createElement('button');
+      b.className = 'nav-btn' + (k === current ? ' active' : '');
+      b.textContent = label; b.onclick = () => switchTab(k);
+      nav.appendChild(b);
+    });
+  }
+
+  function switchTab(name) {
+    current = name;
+    document.querySelectorAll('.nav-btn').forEach(b => {
+      const map = { students: '学生', notices: '通知', links: '收集', todos: '待办', profile: '概况' };
+      b.classList.toggle('active', b.textContent === map[name]);
+    });
+    const view = $('#view');
+    if (name === 'profile') { renderProfileForm(view); return; }
+    const sc = SCHEMA[name];
+    const rows = state.data[name] || [];
+    let html = `<div class="view-head"><h2>${sc.title}</h2>
+      <button class="btn btn-primary" onclick="App.openForm('${name}')">+ ${sc.addLabel}</button></div>`;
+    if (rows.length === 0) html += `<div class="empty">还没有内容，点右上角「${sc.addLabel}」开始添加。</div>`;
+    else { html += `<div class="card-list">`; rows.forEach(r => html += renderRow(name, r)); html += `</div>`; }
+    view.innerHTML = html;
+  }
+
+  function renderRow(table, r) {
+    const sc = SCHEMA[table];
+    const cols = sc.columns(r).map(esc).join('</span><span class="col">');
+    let extra = '';
+    if (sc.toggleDone) extra = `<label class="done-toggle"><input type="checkbox" ${r.done ? 'checked' : ''} onchange="App.toggleDone('${table}','${r.id}',this.checked)"> 完成</label>`;
+    const isLink = table === 'links' && r.url;
+    return `<div class="card ${sc.toggleDone && r.done ? 'done' : ''}">
+      <div class="card-main">
+        <div class="card-cols"><span class="col">${cols}</span></div>
+        ${r.content ? `<div class="card-content">${esc(r.content).replace(/\n/g, '<br>')}</div>` : ''}
+        ${r.note ? `<div class="card-note">${esc(r.note).replace(/\n/g, '<br>')}</div>` : ''}
+        ${extra}
+        ${isLink ? `<a class="card-link" href="${esc(r.url)}" target="_blank" rel="noopener">打开链接 ↗</a>` : ''}
+      </div>
+      <div class="card-actions">
+        <button class="btn btn-ghost" onclick="App.openForm('${table}','${r.id}')">编辑</button>
+        <button class="btn btn-danger" onclick="App.removeRow('${table}','${r.id}')">删除</button>
+      </div></div>`;
+  }
+
+  function openForm(table, id) {
+    const sc = SCHEMA[table];
+    const r = id ? state.data[table].find(x => x.id === id) : {};
+    let body = `<h3>${id ? '编辑' : sc.addLabel}</h3>`;
+    sc.fields.forEach(f => {
+      const val = r[f.key] != null ? r[f.key] : '';
+      body += `<label class="fld"><span>${f.label}${f.required ? ' *' : ''}</span>`;
+      if (f.type === 'textarea') body += `<textarea data-k="${f.key}" rows="3">${esc(val)}</textarea>`;
+      else if (f.type === 'select') body += `<select data-k="${f.key}">` + f.options.map(o => `<option ${o === val ? 'selected' : ''}>${o}</option>`).join('') + `</select>`;
+      else body += `<input type="${f.type}" data-k="${f.key}" value="${esc(val)}">`;
+      body += `</label>`;
+    });
+    showModal(body, async () => {
+      const row = { id: r.id || uid(), created_at: r.created_at || new Date().toISOString() };
+      sc.fields.forEach(f => row[f.key] = $(`[data-k="${f.key}"]`).value.trim());
+      await Storage.upsert(table, row);
+      state.data[table] = await Storage.list(table);
+      switchTab(table); closeModal();
+    });
+  }
+
+  async function toggleDone(table, id, checked) {
+    const row = state.data[table].find(x => x.id === id); if (!row) return;
+    row.done = checked; await Storage.upsert(table, row);
+    state.data[table] = await Storage.list(table); switchTab(table);
+  }
+  async function removeRow(table, id) {
+    if (!confirm('确定删除这条吗？')) return;
+    await Storage.remove(table, id);
+    state.data[table] = await Storage.list(table); switchTab(table);
+  }
+
+  function renderProfileForm(view) {
+    const p = state.profile;
+    const f = (k, label, type = 'text') => `<label class="fld"><span>${label}</span><input type="${type}" data-p="${k}" value="${esc(p[k] || '')}"></label>`;
+    view.innerHTML = `<div class="view-head"><h2>班级概况</h2></div>
+      <div class="card">
+        ${f('className', '班级名称')}${f('slogan', '班级口号')}${f('headTeacher', '班主任姓名')}${f('phone', '联系电话', 'tel')}
+        <div class="card-actions" style="margin-top:12px"><button class="btn btn-primary" onclick="App.saveProfile()">保存概况</button></div>
+      </div>
+      <div class="card"><div class="card-note">这是工作台基础信息，会显示在顶部。改动后电脑/手机同步更新。</div></div>`;
+  }
+  async function saveProfile() {
+    const p = {};
+    ['className', 'slogan', 'headTeacher', 'phone'].forEach(k => p[k] = $(`[data-p="${k}"]`).value.trim());
+    await Storage.setKV('profile', p); state.profile = p;
+    renderHeader(); renderProfileCard(); alert('已保存 ✓');
+  }
+
+  function openSettings() {
+    const c = Storage.getCfg() || {};
+    const body = `<h3>同步与加密设置</h3>
+      <div class="card-note">填入 Supabase 信息即可在电脑/手机实时同步。设置「保护密码」后，所有数据在离开浏览器前加密，云端和本地都只存密文，密码不上传。</div>
+      <label class="fld"><span>Supabase URL</span><input type="text" data-s="url" value="${esc(c.url || '')}" placeholder="https://xxxx.supabase.co"></label>
+      <label class="fld"><span>anon key</span><input type="text" data-s="key" value="${esc(c.key || '')}"></label>
+      <label class="fld"><span>保护密码（可选·推荐）</span><input type="password" data-s="pass" placeholder="设了才加密；留空则不加密"></label>
+      <div class="err" id="setErr"></div>
+      <div class="card-actions" style="margin-top:12px">
+        <button class="btn btn-primary" onclick="App.saveSettings()">保存并连接</button>
+        <button class="btn btn-ghost" onclick="App.disconnect()">仅用本地</button>
+      </div>`;
+    showModal(body, null);
+  }
+
+  async function saveSettings() {
+    const url = $('[data-s="url"]').value.trim();
+    const key = $('[data-s="key"]').value.trim();
+    const pass = $('[data-s="pass"]').value;
+    const snap = {};
+    if (!Crypto.hasKey()) {
+      for (const t of TABLES) snap[t] = await Storage.list(t);
+      snap.profile = await Storage.getKV('profile');
+    }
+    Storage.setCfg({ url, key });
+    if (pass) {
+      const salt = Crypto.newSalt();
+      await Crypto.setKey(pass, salt);
+      const check = await Crypto.encrypt({ t: 'ok' });
+      Storage.setEnc({ enabled: true, salt, check });
+    } else { Crypto.clear(); Storage.setEnc(null); }
+    const mode = await Storage.init();
+    let has = snap.profile && Object.keys(snap.profile).length;
+    for (const t of TABLES) if ((snap[t] || []).length) has = true;
+    if (has) {
+      if (snap.profile) await Storage.setKV('profile', snap.profile);
+      for (const t of TABLES) for (const r of (snap[t] || [])) await Storage.upsert(t, r);
+    }
+    state.profile = await Storage.getKV('profile') || { className: '', slogan: '', headTeacher: '', phone: '' };
+    for (const t of TABLES) state.data[t] = await Storage.list(t);
+    renderHeader(); renderProfileCard(); switchTab(current); updateSyncBadge(mode);
+    closeModal();
+    alert(mode === 'supabase' ? (pass ? '已加密并连接云端同步 🔒' : '已连接云端同步 ☁') : '已保存（本地模式）。');
+  }
+
+  function disconnect() { Storage.setCfg(null); updateSyncBadge('local'); closeModal(); alert('已断开云端，改用本机本地加密存储。'); }
+
+  async function exportData() {
+    const out = { profile: state.profile, exportedAt: new Date().toISOString() };
+    for (const t of TABLES) out[t] = await Storage.list(t);
+    const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = '班主任工作台备份.json'; a.click();
+  }
+  function importData(file) {
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const d = JSON.parse(reader.result);
+        if (d.profile) { await Storage.setKV('profile', d.profile); state.profile = d.profile; }
+        for (const t of TABLES) if (Array.isArray(d[t])) for (const r of d[t]) await Storage.upsert(t, r), state.data[t] = await Storage.list(t);
+        renderHeader(); renderProfileCard(); switchTab(current); alert('导入成功 ✓');
+      } catch (e) { alert('导入失败：文件格式不对'); }
+    };
+    reader.readAsText(file);
+  }
+
+  function showModal(inner, onSave) {
+    $('#modalBody').innerHTML = inner;
+    $('#modal').classList.remove('hidden');
+    const saveBtn = $('#modalSave');
+    if (onSave) { saveBtn.style.display = ''; saveBtn.onclick = onSave; } else saveBtn.style.display = 'none';
+  }
+  function closeModal() { $('#modal').classList.add('hidden'); }
+
+  function askPassphrase(enc) {
+    return new Promise(resolve => {
+      const modal = $('#passModal'); modal.classList.remove('hidden');
+      const err = $('#passErr'); err.textContent = '';
+      const input = $('#passInput'); input.value = ''; input.focus();
+      const tryFn = async () => {
+        try {
+          await Crypto.setKey(input.value, enc.salt);
+          const obj = await Crypto.decrypt(enc.check);
+          if (obj && obj.t === 'ok') { modal.classList.add('hidden'); resolve(); }
+          else { Crypto.clear(); err.textContent = '密码错误，请重试'; input.value = ''; input.focus(); }
+        } catch (e) { Crypto.clear(); err.textContent = '密码错误，请重试'; input.value = ''; input.focus(); }
+      };
+      $('#passOk').onclick = tryFn;
+      input.onkeydown = e => { if (e.key === 'Enter') tryFn(); };
+    });
+  }
+
+  function bind() {
+    $('#settingsBtn').onclick = openSettings;
+    $('#exportBtn').onclick = exportData;
+    $('#importInput').onchange = e => { if (e.target.files[0]) importData(e.target.files[0]); e.target.value = ''; };
+    $('#importBtn').onclick = () => $('#importInput').click();
+    $('#modalClose').onclick = closeModal;
+    $('#modal').onclick = e => { if (e.target.id === 'modal') closeModal(); };
+  }
+
+  window.App = { openForm, removeRow, toggleDone, saveProfile, saveSettings, disconnect, openSettings };
+  window.closeModal = closeModal;
+  document.addEventListener('DOMContentLoaded', async () => {
+    bind();
+    const enc = Storage.getEnc();
+    if (enc && enc.enabled) await askPassphrase(enc);
+    await bootstrap();
+  });
+})();
+  </script>
+</body>
+</html>
